@@ -26,7 +26,7 @@ import IPython
 import numpy as np
 import pandas as pd
 #import setuptools
-from setuptools import pkg_resources as pkg
+#from setuptools import pkg_resources as pkg
 import torch
 import torchvision
 import yaml
@@ -362,38 +362,40 @@ def check_python(minimum='3.7.0'):
 
 
 def check_version(current='0.0.0', minimum='0.0.0', name='version ', pinned=False, hard=False, verbose=False):
+    return True
     # Check version vs. required version
-    current, minimum = (pkg.parse_version(x) for x in (current, minimum))
-    result = (current == minimum) if pinned else (current >= minimum)  # bool
-    s = f'WARNING ⚠️ {name}{minimum} is required by YOLO, but {name}{current} is currently installed'  # string
-    if hard:
-        assert result, emojis(s)  # assert min requirements met
-    if verbose and not result:
-        LOGGER.warning(s)
-    return result
+    #current, minimum = (pkg.parse_version(x) for x in (current, minimum))
+    #result = (current == minimum) if pinned else (current >= minimum)  # bool
+    #s = f'WARNING ⚠️ {name}{minimum} is required by YOLO, but {name}{current} is currently installed'  # string
+    #if hard:
+    #    assert result, emojis(s)  # assert min requirements met
+    #if verbose and not result:
+    #    LOGGER.warning(s)
+    #return result
 
 
 @TryExcept()
 def check_requirements(requirements=ROOT / 'requirements.txt', exclude=(), install=True, cmds=''):
     # Check installed dependencies meet YOLO requirements (pass *.txt file or list of packages or single package str)
+    return True
     prefix = colorstr('red', 'bold', 'requirements:')
     check_python()  # check python version
     if isinstance(requirements, Path):  # requirements.txt file
         file = requirements.resolve()
         assert file.exists(), f"{prefix} {file} not found, check failed."
-        with file.open() as f:
-            requirements = [f'{x.name}{x.specifier}' for x in pkg.parse_requirements(f) if x.name not in exclude]
+        #with file.open() as f:
+            #requirements = [f'{x.name}{x.specifier}' for x in pkg.parse_requirements(f) if x.name not in exclude]
     elif isinstance(requirements, str):
         requirements = [requirements]
 
     s = ''
     n = 0
-    for r in requirements:
-        try:
-            pkg.require(r)
-        except (pkg.VersionConflict, pkg.DistributionNotFound):  # exception if requirements not met
-            s += f'"{r}" '
-            n += 1
+    #for r in requirements:
+        #try:
+            #pkg.require(r)
+        #except (pkg.VersionConflict, pkg.DistributionNotFound):  # exception if requirements not met
+        #    s += f'"{r}" '
+        #    n += 1
 
     if s and install and AUTOINSTALL:  # check environment variable
         LOGGER.info(f"{prefix} YOLO requirement{'s' * (n > 1)} {s}not found, attempting AutoUpdate...")

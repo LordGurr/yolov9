@@ -192,13 +192,16 @@ def run(
 
         # Loss
         if compute_loss:
-            preds, train_out = preds  # unpack model output correctly
+            preds, train_out = preds  # unpack first level
         
-            # compute validation loss
+            # YOLOv9 dual head → train_out is a tuple/list
+            if isinstance(train_out, (list, tuple)):
+                train_out = train_out[0]  # take main head ONLY
+        
             _, loss_items = compute_loss(train_out, targets)
             loss += loss_items
         
-            preds = preds[1]  # keep this for NMS (YOLOv9 dual head)
+            preds = preds[1]  # for NMS
         else:
             preds = preds[0][1]
 

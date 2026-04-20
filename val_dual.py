@@ -192,9 +192,13 @@ def run(
 
         # Loss
         if compute_loss:
-            preds = preds[1]
-            #train_out = train_out[1]
-            #loss += compute_loss(train_out, targets)[1]  # box, obj, cls
+            preds, train_out = preds  # unpack model output correctly
+        
+            # compute validation loss
+            _, loss_items = compute_loss(train_out, targets)
+            loss += loss_items
+        
+            preds = preds[1]  # keep this for NMS (YOLOv9 dual head)
         else:
             preds = preds[0][1]
 

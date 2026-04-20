@@ -188,22 +188,21 @@ def run(
 
         # Inference
         with dt[1]:
-            preds, train_out = model(im) if compute_loss else (model(im, augment=augment), None)
-
+            out = model(im) if compute_loss else model(im, augment=augment)
+        
         # Loss
         if compute_loss:
-            preds, train_out = preds  # unpack first level
-        
-            # YOLOv9 dual head → train_out is a tuple/list
-            if isinstance(train_out, (list, tuple)):
-                train_out = train_out[0]  # take main head ONLY
-        
-            _, loss_items = compute_loss(train_out, targets)
+            # Use EXACT same input as training
+            _, loss_items = compute_loss(out, targets)
             loss += loss_items
         
-            preds = preds[1]  # for NMS
+            # Extract predictions for NMS (inference branch)
+            if isinstance(out, (list, tuple)):
+                preds = out[0]  # first element is inference output
+            else:
+                preds = out
         else:
-            preds = preds[0][1]
+            preds = out[0][1]
 
         # NMS
         targets[:, 2:] *= torch.tensor((width, height, width, height), device=device)  # to pixels

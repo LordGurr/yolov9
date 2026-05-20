@@ -138,8 +138,7 @@ def run(
     model.eval()
     cuda = device.type != 'cpu'
     #is_coco = isinstance(data.get('val'), str) and data['val'].endswith(f'coco{os.sep}val2017.txt')  # COCO dataset
-    #is_coco = isinstance(data.get('val'), str) and data['val'].endswith(f'val2017.txt')  # COCO dataset
-    is_coco = False
+    is_coco = isinstance(data.get('val'), str) and data['val'].endswith(f'val2017.txt')  # COCO dataset
     nc = 1 if single_cls else int(data['nc'])  # number of classes
     iouv = torch.linspace(0.5, 0.95, 10, device=device)  # iou vector for mAP@0.5:0.95
     niou = iouv.numel()
@@ -189,21 +188,11 @@ def run(
 
         # Inference
         with dt[1]:
-            out = model(im) if compute_loss else model(im, augment=augment)
-        
+            preds, train_out = model(im) if compute_loss else (model(im, augment=augment), None)
+
         # Loss
         if compute_loss:
-            # Use EXACT same input as training
-            _, loss_items = compute_loss(out, targets)
-            loss += loss_items
-        
-            # Extract predictions for NMS (inference branch)
-            if isinstance(out, (list, tuple)):
-                preds = out[0]  # first element is inference output
-            else:
-                preds = out
-        else:
-            preds = out[0][1]
+            loss += compute_loss(train_out, targets)[1]  # box, obj, cls
 
         # NMS
         targets[:, 2:] *= torch.tensor((width, height, width, height), device=device)  # to pixels
@@ -293,7 +282,7 @@ def run(
         callbacks.run('on_val_end', nt, tp, fp, p, r, f1, ap, ap50, ap_class, confusion_matrix)
 
     # Save JSON
-    if save_json and len(jdict) and False:
+    if save_json and len(jdict):
         w = Path(weights[0] if isinstance(weights, list) else weights).stem if weights is not None else ''  # weights
         anno_json = str(Path(data.get('path', '../coco')) / 'annotations/instances_val2017.json')  # annotations json
         pred_json = str(save_dir / f"{w}_predictions.json")  # predictions json

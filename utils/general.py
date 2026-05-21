@@ -441,12 +441,24 @@ def check_imshow(warn=False):
 def check_suffix(file='yolo.pt', suffix=('.pt',), msg=''):
     # Check file(s) for acceptable suffix
     if file and suffix:
+        # Säkerställ att suffix alltid är en lista med strängar
         if isinstance(suffix, str):
             suffix = [suffix]
-        for f in file if isinstance(file, (list, tuple)) else [file]:
-            s = Path(f).suffix.lower()  # file suffix
-            if len(s):
-                assert s in suffix, f"{msg}{f} acceptable suffix is {suffix}"
+        else:
+            suffix = list(suffix)
+            
+        # Hantera om file är en enskild sträng eller en lista/tupel
+        files = [file] if isinstance(file, str) else list(file)
+        
+        for f in files:
+            # Tvätta strängen från eventuella citattecken och mellanslag
+            clean_file = str(f).strip("'\" ").lower()
+            
+            # Kontrollera om filen slutar på något av de giltiga suffixen
+            has_valid_suffix = any(clean_file.endswith(s.lower()) for s in suffix)
+            
+            assert has_valid_suffix, f"{msg}{f} acceptable suffix is {suffix}"
+
 
 
 def check_yaml(file, suffix=('.yaml', '.yml')):
